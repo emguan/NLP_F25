@@ -103,30 +103,7 @@ class Grammar:
         Args:
             grammar_file (str): Path to the raw grammar file 
         """
-
-        self.rules = defaultdict(list)
-        with open(grammar_file, 'r') as file:
-            for line in file:
-
-                stripped_line = line.strip()
-
-                if not stripped_line or line[0] == '#': # skip empty lines and lines starting with with #
-                    continue 
-
-                stripped = line.split()
-
-                prob = stripped[0]
-
-                entity = stripped[1]
-
-                self.rules[entity].append([stripped[2:], prob])
-
-                print(entity, self.rules[entity])
-
-        
-            
-
-
+                    
     def sample(self, derivation_tree = False, max_expansions = 450, start_symbol = "ROOT"):
         """
         Sample a random sentence from this grammar
