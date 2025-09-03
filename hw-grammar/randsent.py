@@ -94,6 +94,7 @@ class Grammar:
         """
         # Parse the input grammar file
         self.rules = None
+        self.count = None
         self._load_rules_from_file(grammar_file)
 
     def _load_rules_from_file(self, grammar_file):
@@ -104,7 +105,7 @@ class Grammar:
             grammar_file (str): Path to the raw grammar file 
         """
 
-        self.rules = defaultdict(lambda: {"definitions": [], "weights": []})# https://stackoverflow.com/questions/5029934/defaultdict-of-defaultdict
+        self.rules = defaultdict(lambda: {"definitions": [], "weights": []}) # https://stackoverflow.com/questions/5029934/defaultdict-of-defaultdict
         
         with open(grammar_file, 'r') as file:
             for line in file:
@@ -144,15 +145,16 @@ class Grammar:
         Returns:
             str: the random sentence or its derivation tree
         """
+        self.count = max_expansions
 
-        sentence, tree = self.generate(max_expansions, start_symbol)
+        sentence, tree = self.generate(start_symbol)
 
         if derivation_tree:
             return tree
         
         return " ".join(sentence)
     
-    def generate(self, max_expansions, start_symbol):
+    def generate(self, start_symbol):
 
         '''
             Pseudocode planning:
@@ -166,25 +168,26 @@ class Grammar:
         
         '''
 
-        count = max_expansions
-
         sentence = []
         tree = []
 
-        if start_symbol not in self.rules: # terminal
+        if start_symbol not in self.rules: # terminal, not a key
             return [start_symbol], start_symbol
 
-        if max_expansions <= 0: # reached expansion limit
-            return [start_symbol], start_symbol
-            
+        if self.count <= 0: # reached expansion limit
+            return "", ""
+        
+        self.count -= 1 # decrease number of max expansions left
+
         phrase =random.choices(self.rules[start_symbol]["definitions"],weights=self.rules[start_symbol]["weights"])[0] # https://docs.python.org/3/library/random.html
 
         for word in phrase:
-            add_sent, add_term = self.generate(count - 1, start_symbol = word)
+            add_sent, add_term = self.generate(start_symbol = word)
             sentence.extend(add_sent)
             tree.append(add_term)
 
-        final_tree = tree = f"({start_symbol} {' '.join(tree)})" # formatting, adding () where new start symbol occurs
+
+        final_tree = f"({start_symbol} {' '.join(tree)})" # formatting, adding () where new start symbol occurs
         return sentence, final_tree
 
 
@@ -196,7 +199,7 @@ class Grammar:
 ####################
 def main():
 
-    random.seed(42) # for testing purposes, remove on submission
+    #random.seed(42) # for testing purposes, remove on submission
 
     # Parse command-line options
     args = parse_args()
