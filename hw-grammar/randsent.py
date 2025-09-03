@@ -145,12 +145,10 @@ class Grammar:
             str: the random sentence or its derivation tree
         """
 
-        sentence = self.generate(max_expansions, start_symbol)
-
-        print(sentence)
+        sentence, tree = self.generate(max_expansions, start_symbol)
 
         if derivation_tree:
-            return
+            return tree
         
         return " ".join(sentence)
     
@@ -169,28 +167,27 @@ class Grammar:
         '''
 
         count = max_expansions
-        done = False
 
         sentence = []
+        tree = []
 
         if start_symbol not in self.rules: # terminal
-            return [start_symbol]
+            return [start_symbol], start_symbol
 
         if max_expansions <= 0: # reached expansion limit
-            return [start_symbol] 
+            return [start_symbol], start_symbol
             
         phrase =random.choices(self.rules[start_symbol]["definitions"],weights=self.rules[start_symbol]["weights"])[0] # https://docs.python.org/3/library/random.html
 
         for word in phrase:
-            add_sent = self.generate(count - 1, start_symbol = word)
+            add_sent, add_term = self.generate(count - 1, start_symbol = word)
             sentence.extend(add_sent)
+            tree.append(add_term)
 
-        return sentence
+        final_tree = tree = f"({start_symbol} {' '.join(tree)})" # formatting, adding () where new start symbol occurs
+        return sentence, final_tree
 
- 
-    
-    def print_tree(root, nonterminals, sentence):
-        return
+
     
 
 
@@ -198,6 +195,9 @@ class Grammar:
 ### Main Program
 ####################
 def main():
+
+    random.seed(42) # for testing purposes, remove on submission
+
     # Parse command-line options
     args = parse_args()
 
