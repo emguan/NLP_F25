@@ -104,28 +104,29 @@ class Grammar:
             grammar_file (str): Path to the raw grammar file 
         """
 
-        self.rules = defaultdict(list)
+        self.rules = defaultdict(lambda: {"definitions": [], "weights": []})# https://stackoverflow.com/questions/5029934/defaultdict-of-defaultdict
+        
         with open(grammar_file, 'r') as file:
             for line in file:
 
                 stripped_line = line.strip()
 
-                if not stripped_line or line[0] == '#': # skip empty lines and lines starting with with #
+                if not stripped_line or stripped_line.startswith("#"): # skip empty lines and lines starting with with #
                     continue 
 
-                stripped = line.split()
+                if '#' in stripped_line: # remove inline commnets
+                    stripped_line = stripped_line.split("#")[0].strip() 
+    
+                pts = stripped_line.split()
 
-                prob = stripped[0]
+                prob = int(pts[0])
 
-                entity = stripped[1]
+                entity = pts[1]
 
-                self.rules[entity].append([stripped[2:], prob])
+                phrase = pts[2:]
 
-                print(entity, self.rules[entity])
-
-        
-            
-
+                self.rules[entity]["definitions"].append(phrase) #format: terminal: [{nonterminal: [terminal],weights:[weights] }]
+                self.rules[entity]["weights"].append(prob)
 
     def sample(self, derivation_tree = False, max_expansions = 450, start_symbol = "ROOT"):
         """
@@ -144,19 +145,53 @@ class Grammar:
             str: the random sentence or its derivation tree
         """
 
-        count = 0
-        done = False
-        prev_token = start_symbol
+        sentence = self.generate(max_expansions, start_symbol)
 
-        sentence = ""
-
-        while (count < max_expansions or not done):
-            #sentence += self.rules[prev_token]
-            return
+        print(sentence)
 
         if derivation_tree:
             return
-        raise NotImplementedError
+        
+        return " ".join(sentence)
+    
+    def generate(self, max_expansions, start_symbol):
+
+        '''
+            Pseudocode planning:
+
+            1. if word is terminal, return word
+            2. if run out of expansions, return word
+            3. if non-terminal, step into a subphrase 
+            4. randomly choose one phrase
+            5. step through all words in this phrase
+            6. recurse with each word, add returns to sentence
+        
+        '''
+
+        count = max_expansions
+        done = False
+
+        sentence = []
+
+        if start_symbol not in self.rules: # terminal
+            return [start_symbol]
+
+        if max_expansions <= 0: # reached expansion limit
+            return [start_symbol] 
+            
+        phrase =random.choices(self.rules[start_symbol]["definitions"],weights=self.rules[start_symbol]["weights"])[0] # https://docs.python.org/3/library/random.html
+
+        for word in phrase:
+            add_sent = self.generate(count - 1, start_symbol = word)
+            sentence.extend(add_sent)
+
+        return sentence
+
+ 
+    
+    def print_tree(root, nonterminals, sentence):
+        return
+    
 
 
 ####################
