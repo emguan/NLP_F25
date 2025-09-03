@@ -175,11 +175,11 @@ class Grammar:
             return [start_symbol], start_symbol
 
         if self.count <= 0: # reached expansion limit
-            return "", ""
+            return "...", ""
         
         self.count -= 1 # decrease number of max expansions left
 
-        phrase =random.choices(self.rules[start_symbol]["definitions"],weights=self.rules[start_symbol]["weights"])[0] # https://docs.python.org/3/library/random.html
+        phrase = random.choices(self.rules[start_symbol]["definitions"],weights=self.rules[start_symbol]["weights"])[0] # https://docs.python.org/3/library/random.html
 
         for word in phrase:
             add_sent, add_term = self.generate(start_symbol = word)
@@ -189,10 +189,6 @@ class Grammar:
 
         final_tree = f"({start_symbol} {' '.join(tree)})" # formatting, adding () where new start symbol occurs
         return sentence, final_tree
-
-
-    
-
 
 ####################
 ### Main Program
