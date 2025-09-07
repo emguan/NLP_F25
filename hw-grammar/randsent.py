@@ -195,8 +195,7 @@ class Grammar:
 ####################
 def main():
 
-    #random.seed(42) # for testing purposes, remove on submission
-
+    # random.seed(112409) # for testing purposes, remove on submission
     # Parse command-line options
     args = parse_args()
 

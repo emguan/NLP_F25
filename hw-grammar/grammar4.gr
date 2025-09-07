@@ -19,11 +19,23 @@
 
 # Rules for creating full sentences.
 
-4	ROOT	S .
-3	ROOT	S !
+1	ROOT	S .
+1	ROOT	S !
 1	ROOT	is it true that S ?  
 1   ROOT    it IVP that S .
 1   ROOT    that S IVP .
+
+100   ROOT    QVerb  Nounlike ActiveVerblike ?
+100   ROOT    QVerb  it AIVP that S ? 
+100   ROOT    QVerb  Nounlike ActiveTP S ?
+
+1   ROOT    SPS .
+
+1   ROOT    TSV SPS .
+1   ROOT    TPV SPS .
+
+1   SPS   SN SVP 
+1   SPS   PPhrase PVP 
 
 # The basic grammar rules.  Here's what the abbreviations stand for:
 #    S  = sentence
@@ -34,32 +46,55 @@
 #    Prep = preposition
 #    Adj = adjective
 
+5	S	Nounlike Verblike
+1   S   Nounlike TP S
+
+1   SVP     SV NP
+1   SVP     ISV
+1   PVP     PV NP
+1   PVP     IPV
+
 20   Nounlike    NP
 2   Nounlike    Pronoun
 1   Nounlike    PersonalNoun
 
+1   NS  SN
+1   NS  PN
+
+1   PPhrase NS Conj NS
+8   PPhrase the PN
+
 1   Verblike    InTransVerb
 1   Verblike    VP
+1   ActiveVerblike    ActiveInTransVerb
+1   ActiveVerblike    ActiveVP
 
-5	S	Nounlike Verblike
-1   S   Nounlike TP S
+1   SV  SV Conj SV
+1   PV  PV Conj PV
+1   TSV  SN ThatSV Trans
+1   TPV  PPhrase ThatPV  Trans
 
-5	VP	TransVerb Nounlike
+7	VP	TransVerb Nounlike
 1	VP  Verblike Conj Verblike
+7	ActiveVP	ActiveTransVerb Nounlike
+1	ActiveVP  ActiveVerblike Conj ActiveVerblike
 
 1   IVP     EmotionalVerb Nounlike
+1   AIVP     ActiveEmotionalVerb Nounlike
 
-5	NP	Det Noun
+8	NP	Det Noun
 1	NP	NP PP
 1	NP  Nounlike Conj Noun
 1	NP  Nounlike Conj NP
 1	NP  Nounlike Conj PersonalNoun
 
-4	PP	Prep Nounlike
+1	PP	Prep Nounlike
 
 1   TP  ThatVerb Trans
+1   ActiveTP  ActiveThatVerb Trans
 
-3 Noun	Adj Noun
+
+2 Noun	Adj Noun
 
 # Vocabulary.  Your program can see that "ate" is a terminal
 # symbol because there exists no rule for rewriting it.
@@ -72,9 +107,34 @@
 1	TransVerb	kissed
 1	TransVerb	understood
 1	TransVerb	pickled
+1	ActiveTransVerb	eat
+1	ActiveTransVerb	want
+1	ActiveTransVerb	kiss
+1	ActiveTransVerb	understand
+1	ActiveTransVerb	pickle
+
+5   PV   ActiveTransVerb
+
+2   SV  eats
+2   SV  wants
+2   SV  kisses
+2   SV  understands
+2   SV  pickles
+
 1   InTransVerb    sighed
+1   ActiveInTransVerb    sigh
+
+1   IPV ActiveInTransVerb
+1   ISV sighs
+
 1   ThatVerb   thought
+1   ActiveThatVerb   think
+
+1   ThatPV  think
+1   ThatSV  thinks
+
 1   EmotionalVerb     perplexed
+1   ActiveEmotionalVerb     perplex
 
 1   Adverb  very
 
@@ -84,7 +144,6 @@
 1   Conj    and
 1   Trans   that
 
-
 1	Noun	president
 1	Noun	sandwich
 1	Noun	pickle
@@ -92,6 +151,16 @@
 1	Noun	floor
 1   PersonalNoun    Sally
 1   Pronoun     it
+
+1   SN  Det Noun
+1   SN  Pronoun
+1   SN  PersonalNoun
+
+1   PN  presidents
+1   PN  sandwiches
+1   PN  pickles
+1   PN  chiefs of staff
+1   PN  floors
 
 1	Adj	fine
 1	Adj	delicious
@@ -102,3 +171,6 @@
 1	Prep	on
 1	Prep	under
 1	Prep	in
+
+1   QVerb   did
+1   QVerb   will

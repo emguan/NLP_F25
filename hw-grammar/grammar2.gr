@@ -32,12 +32,12 @@
 #    Prep = preposition
 #    Adj = adjective
 
-5	S	NP VP
-5	VP	Verb NP
-5	NP	Det Noun
+1	S	NP VP
+1	VP	Verb NP
+8	NP	Det Noun
 1	NP	NP PP
-4	PP	Prep NP
-3 Noun	Adj Noun
+1	PP	Prep NP
+2 Noun	Adj Noun
 
 # Vocabulary.  Your program can see that "ate" is a terminal
 # symbol because there exists no rule for rewriting it.
@@ -51,8 +51,8 @@
 1	Verb	understood
 1	Verb	pickled
 
-1	Det	the
-1	Det	a
+5	Det	the
+5	Det	a
 1	Det	every
 
 1	Noun	president
@@ -67,6 +67,6 @@
 1	Adj	pickled
 
 1	Prep	with
-1	Prep	on
-1	Prep	under
-1	Prep	in
+2	Prep	on
+2	Prep	under
+2	Prep	in
