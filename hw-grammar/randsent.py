@@ -11,11 +11,11 @@ Code template written by Alexandra DeLucia,
 based on the submitted assignment with Keith Harrigian
 and Carlos Aguirre Fall 2019
 """
-import os
-import sys
-import random
 import argparse
-from collections import defaultdict
+import os
+import random
+import subprocess
+import sys
 
 # Want to know what command-line arguments a program allows?
 # Commonly you can ask by passing it the --help option, like this:
@@ -93,7 +93,7 @@ class Grammar:
             self
         """
         # Parse the input grammar file
-        self.rules = None
+        self.rules = {}
         self._load_rules_from_file(grammar_file)
 
     def _load_rules_from_file(self, grammar_file):
@@ -103,8 +103,29 @@ class Grammar:
         Args:
             grammar_file (str): Path to the raw grammar file 
         """
-                    
-    def sample(self, derivation_tree = False, max_expansions = 450, start_symbol = "ROOT"):
+        with open(grammar_file, "r") as f:
+            for line in f:
+                if not (line.startswith(" ") or line.startswith("#")):
+                    words = line.split()
+                    if len(words)>=2:
+                        key = words[1]
+                        n = len(words)
+
+                        # stop at comments after a rule
+                        for i in range(n):
+                            if words[i]=="#":
+                                n=i
+                        
+                        if (not self.rules.get(key)):
+                            value = [[float(words[0])] + words[2:n]]
+                            self.rules[key]=value
+                        else:
+                            value = [float(words[0])] + words[2:n]
+                            self.rules[key].append(value)
+
+        print(self.rules)
+
+    def sample(self, derivation_tree, max_expansions, start_symbol):
         """
         Sample a random sentence from this grammar
 
@@ -120,21 +141,39 @@ class Grammar:
         Returns:
             str: the random sentence or its derivation tree
         """
+        expansions = 0
 
-        count = 0
-        done = False
-        prev_token = start_symbol
+        def generate(symbol, grammar):
+            nonlocal expansions
+            if expansions >= max_expansions:
+                print("...")
 
-        sentence = ""
+            # Terminal expansion
+            if symbol not in grammar:
+                if derivation_tree:
+                    return symbol
+                else:
+                    return [symbol]
 
-        while (count < max_expansions or not done):
-            #sentence += self.rules[prev_token]
-            return
+            expansions += 1
+
+            production = random.choices([prod[1:] for prod in grammar[symbol]], weights=[prod[0] for prod in grammar[symbol]])[0]
+            if derivation_tree:
+                result = []
+                for sym in production:
+                    result.append(generate(sym, grammar))
+                result_str = " ".join(result)
+                return f"({symbol} {result_str})"
+            else:
+                result = []
+                for sym in production:
+                    result.extend(generate(sym, grammar))
+                return result
 
         if derivation_tree:
-            return
-        raise NotImplementedError
-
+            return generate(start_symbol, self.rules)
+        else:
+            return " ".join(generate(start_symbol, self.rules))
 
 ####################
 ### Main Program
@@ -159,7 +198,11 @@ def main():
         # If it's a tree, we'll pipe the output through the prettyprint script.
         if args.tree:
             prettyprint_path = os.path.join(os.getcwd(), 'prettyprint')
-            t = os.system(f"echo '{sentence}' | perl {prettyprint_path}")
+            subprocess.run(
+                ['perl', prettyprint_path],
+                input=sentence,
+                text=True
+            )
         else:
             print(sentence)
 
