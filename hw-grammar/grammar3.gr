@@ -19,11 +19,11 @@
 
 # Rules for creating full sentences.
 
-1	ROOT	S .
-1	ROOT	S !
+4	ROOT	S .
+3	ROOT	S !
 1	ROOT	is it true that S ?  
 1   ROOT    it IVP that S .
-1   ROOT    that S IVP
+1   ROOT    that S IVP .
 
 # The basic grammar rules.  Here's what the abbreviations stand for:
 #    S  = sentence
@@ -34,8 +34,8 @@
 #    Prep = preposition
 #    Adj = adjective
 
-1   Nounlike    NP
-1   Nounlike    Pronoun
+20   Nounlike    NP
+2   Nounlike    Pronoun
 1   Nounlike    PersonalNoun
 
 1   Verblike    InTransVerb
@@ -73,7 +73,6 @@
 1	TransVerb	understood
 1	TransVerb	pickled
 1   InTransVerb    sighed
-
 1   ThatVerb   thought
 1   EmotionalVerb     perplexed
 
