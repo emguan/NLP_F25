@@ -120,7 +120,7 @@ class Grammar:
     
                 pts = stripped_line.split()
 
-                prob = int(pts[0])
+                prob = float(pts[0])
 
                 entity = pts[1]
 
