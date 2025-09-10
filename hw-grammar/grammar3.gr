@@ -38,13 +38,15 @@
 2   Nounlike    Pronoun
 1   Nounlike    PersonalNoun
 
-1   Verblike    InTransVerb
+1   Verblike    TransVerb
 1   Verblike    VP
+1   Verblike    InTransVerb
 
 5	S	Nounlike Verblike
 1   S   Nounlike TP S
 
 5	VP	TransVerb Nounlike
+5	VP	TransVerb PP
 1	VP  Verblike Conj Verblike
 
 1   IVP     EmotionalVerb Nounlike
@@ -59,7 +61,9 @@
 
 1   TP  ThatVerb Trans
 
-3 Noun	Adj Noun
+3   Noun	Adj Noun
+1   Adj     Adverb Adj    
+
 
 # Vocabulary.  Your program can see that "ate" is a terminal
 # symbol because there exists no rule for rewriting it.
@@ -72,6 +76,7 @@
 1	TransVerb	kissed
 1	TransVerb	understood
 1	TransVerb	pickled
+1	TransVerb	worked
 1   InTransVerb    sighed
 1   ThatVerb   thought
 1   EmotionalVerb     perplexed
@@ -86,6 +91,8 @@
 
 
 1	Noun	president
+1	Noun	proposal
+1	Noun	desk
 1	Noun	sandwich
 1	Noun	pickle
 1	Noun	chief of staff

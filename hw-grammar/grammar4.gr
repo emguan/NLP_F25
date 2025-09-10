@@ -112,6 +112,8 @@
 1	ActiveTransVerb	kiss
 1	ActiveTransVerb	understand
 1	ActiveTransVerb	pickle
+1	ActiveTransVerb	choose
+
 
 5   PV   ActiveTransVerb
 
@@ -120,6 +122,7 @@
 2   SV  kisses
 2   SV  understands
 2   SV  pickles
+2   SV  chooses
 
 1   InTransVerb    sighed
 1   ActiveInTransVerb    sigh
@@ -149,6 +152,7 @@
 1	Noun	pickle
 1	Noun	chief of staff
 1	Noun	floor
+1	Noun	citizen
 1   PersonalNoun    Sally
 1   Pronoun     it
 
@@ -159,6 +163,7 @@
 1   PN  presidents
 1   PN  sandwiches
 1   PN  pickles
+1   PN  citizens
 1   PN  chiefs of staff
 1   PN  floors
 
