@@ -78,17 +78,28 @@
 1   IVP     EmotionalVerb Nounlike
 1   AIVP     ActiveEmotionalVerb Nounlike
 
+1   IPV ActiveInTransVerb
+1   ISV sighs
+
+
 1   NS  SN
 1   NS  PN
 
 1   PPhrase NS Conj NS
 8   PPhrase the PN
 
+1   SV  SV Conj SV
+1   PV  PV Conj PV
+1   TSV  SN ThatSV Trans
+1   TPV  PPhrase ThatPV  Trans
+
 8	NP	Det Noun
 1	NP	NP PP
 1	NP  Nounlike Conj Noun
 1	NP  Nounlike Conj NP
 1	NP  Nounlike Conj PersonalNoun
+4	NP	aDet ConsonantNoun
+4	NP	anDet VowelNoun
 
 1	PP	Prep Nounlike
 
@@ -102,10 +113,11 @@
 1 VowelNoun VowelAdj ConsonantNoun
 1 ConsonantNoun ConsonantAdj VowelNoun
 1 ConsonantNoun ConsonantAdj ConsonantNoun
-1 ConsonantNoun Adverb VowelAdj ConsonantNoun
-1 ConsonantNoun Adverb ConsonantAdj ConsonantNoun
+1 ConsonantNoun VowelAdj ConsonantNoun
+1 ConsonantNoun ConsonantAdj ConsonantNoun
 
 1 ConsonantAdj Adverb ConsonantAdj
+1 ConsonantAdj Adverb VowelAdj
 
 # Vocabulary.  Your program can see that "ate" is a terminal
 # symbol because there exists no rule for rewriting it.
@@ -125,6 +137,15 @@
 1	ActiveTransVerb	pickle
 1	ActiveTransVerb	choose
 
+1   PV  ActiveTransVerb
+
+2   SV  eats
+2   SV  wants
+2   SV  kisses
+2   SV  understands
+2   SV  pickles
+2   SV  chooses
+
 1   InTransVerb    sighed
 1   ActiveInTransVerb    sigh
 1   ActiveInTransVerb   think
@@ -132,17 +153,16 @@
 1   ThatVerb   thought
 1   ActiveThatVerb   think
 
+1   ThatPV  think
+1   ThatSV  thinks
+
 1   EmotionalVerb     perplexed
 1   ActiveEmotionalVerb     perplex
 
 1   Adverb  very
 
-1	aDet	the
 1	aDet	a
-1	aDet	every
-1	anDet	the
-4	anDet	an
-1	anDet	every
+1	anDet	an
 1	Det	the
 1	Det	a
 1	Det	every
@@ -168,6 +188,16 @@
 
 1   SN  aDet ConsonantNoun
 1   SN  anDet VowelNoun
+1   SN  Det Noun
+1   SN  Pronoun
+1   SN  PersonalNoun
+
+1   PN  presidents
+1   PN  sandwiches
+1   PN  pickles
+1   PN  citizens
+1   PN  chiefs of staff
+1   PN  floors
 
 1	ConsonantAdj	fine
 1	ConsonantAdj	delicious
