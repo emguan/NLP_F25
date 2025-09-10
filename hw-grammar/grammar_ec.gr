@@ -28,8 +28,19 @@
 1   ROOT    QVerb  Nounlike ActiveVerblike ?
 1   ROOT    QVerb  it AIVP that S ? 
 1   ROOT    QVerb  Nounlike ActiveTP S ?
-100   ROOT    QNoun  IVP ?
-100   ROOT    QPrefix Nounlike ActiveVerblike ?
+1   ROOT    QNoun  IVP ?
+1   ROOT    QNoun Verblike ?
+1   ROOT    QPrefix Nounlike ActiveVerblike ?
+1   ROOT    QPrefix  Nounlike ActiveTP S ?
+1   ROOT    QPrefix Nounlike ActiveVerblike Prep ?
+
+1   ROOT    SPS .
+
+1   ROOT    TSV SPS .
+1   ROOT    TPV SPS .
+
+1   SPS   SN SVP 
+1   SPS   PPhrase PVP 
 
 # The basic grammar rules.  Here's what the abbreviations stand for:
 #    S  = sentence
@@ -49,17 +60,29 @@
 
 
 1   Verblike    InTransVerb
+1   Verblike    TransVerb
 1   Verblike    VP
 1   ActiveVerblike    ActiveInTransVerb
 1   ActiveVerblike    ActiveVP
+1   ActiveVerblike    ActiveInTransVerb
 
 7	VP	TransVerb Nounlike
 1	VP  Verblike Conj Verblike
 7	ActiveVP	ActiveTransVerb Nounlike
 1	ActiveVP  ActiveVerblike Conj ActiveVerblike
+1   SVP     SV NP
+1   SVP     ISV
+1   PVP     PV NP
+1   PVP     IPV
 
 1   IVP     EmotionalVerb Nounlike
 1   AIVP     ActiveEmotionalVerb Nounlike
+
+1   NS  SN
+1   NS  PN
+
+1   PPhrase NS Conj NS
+8   PPhrase the PN
 
 8	NP	Det Noun
 1	NP	NP PP
@@ -75,6 +98,15 @@
 2   Noun	Adj Noun
 1   Adj Adverb Adj
 
+1 VowelNoun	VowelAdj VowelNoun
+1 VowelNoun VowelAdj ConsonantNoun
+1 ConsonantNoun ConsonantAdj VowelNoun
+1 ConsonantNoun ConsonantAdj ConsonantNoun
+1 ConsonantNoun Adverb VowelAdj ConsonantNoun
+1 ConsonantNoun Adverb ConsonantAdj ConsonantNoun
+
+1 ConsonantAdj Adverb ConsonantAdj
+
 # Vocabulary.  Your program can see that "ate" is a terminal
 # symbol because there exists no rule for rewriting it.
 # Any symbol that can rewrite as a terminal (or a string of 
@@ -88,7 +120,6 @@
 1	TransVerb	pickled
 1	ActiveTransVerb	eat
 1	ActiveTransVerb	want
-
 1	ActiveTransVerb	kiss
 1	ActiveTransVerb	understand
 1	ActiveTransVerb	pickle
@@ -96,6 +127,7 @@
 
 1   InTransVerb    sighed
 1   ActiveInTransVerb    sigh
+1   ActiveInTransVerb   think
 
 1   ThatVerb   thought
 1   ActiveThatVerb   think
@@ -105,12 +137,26 @@
 
 1   Adverb  very
 
+1	aDet	the
+1	aDet	a
+1	aDet	every
+1	anDet	the
+4	anDet	an
+1	anDet	every
 1	Det	the
 1	Det	a
 1	Det	every
 1   Conj    and
 1   Trans   that
 
+
+1	ConsonantNoun	president
+1	ConsonantNoun	sandwich
+1	ConsonantNoun	pickle
+1	ConsonantNoun	chief of staff
+1	ConsonantNoun	floor
+1	ConsonantNoun	citizen
+1   VowelNoun   apple
 1	Noun	president
 1	Noun	sandwich
 1	Noun	pickle
@@ -119,6 +165,15 @@
 1	Noun	citizen
 1   PersonalNoun    Sally
 1   Pronoun     it
+
+1   SN  aDet ConsonantNoun
+1   SN  anDet VowelNoun
+
+1	ConsonantAdj	fine
+1	ConsonantAdj	delicious
+1	ConsonantAdj	perplexed
+1	ConsonantAdj	pickled
+5   VowelAdj    ambivalent
 
 1	Adj	fine
 1	Adj	delicious

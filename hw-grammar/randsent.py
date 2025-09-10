@@ -177,7 +177,7 @@ class Grammar:
         self.count -= 1 # decrease number of max expansions left
 
         if self.count <= 0: # reached expansion limit
-            return "...", ""
+            return ["..."], ""
 
         phrase = random.choices(self.rules[start_symbol]["definitions"],weights=self.rules[start_symbol]["weights"])[0] # https://docs.python.org/3/library/random.html
 
