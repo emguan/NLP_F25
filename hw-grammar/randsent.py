@@ -129,7 +129,7 @@ class Grammar:
                 self.rules[entity]["definitions"].append(phrase) #format: terminal: [{nonterminal: [terminal],weights:[weights] }]
                 self.rules[entity]["weights"].append(prob)
 
-    def sample(self, derivation_tree = False, max_expansions = 450, start_symbol = "ROOT"):
+    def sample(self, derivation_tree = False, max_expansions = 439, start_symbol = "ROOT"):
         """
         Sample a random sentence from this grammar
 
@@ -145,7 +145,7 @@ class Grammar:
         Returns:
             str: the random sentence or its derivation tree
         """
-        self.count = max_expansions
+        self.count = max_expansions - 1
 
         sentence, tree = self.generate(start_symbol)
 
@@ -173,11 +173,11 @@ class Grammar:
 
         if start_symbol not in self.rules: # terminal, not a key
             return [start_symbol], start_symbol
+        
+        self.count -= 1 # decrease number of max expansions left
 
         if self.count <= 0: # reached expansion limit
             return "...", ""
-        
-        self.count -= 1 # decrease number of max expansions left
 
         phrase = random.choices(self.rules[start_symbol]["definitions"],weights=self.rules[start_symbol]["weights"])[0] # https://docs.python.org/3/library/random.html
 
