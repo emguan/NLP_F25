@@ -62,7 +62,6 @@
 1   Verblike    InTransVerb
 1   Verblike    TransVerb
 1   Verblike    VP
-1   ActiveVerblike    ActiveInTransVerb
 1   ActiveVerblike    ActiveVP
 1   ActiveVerblike    ActiveInTransVerb
 
@@ -80,7 +79,6 @@
 
 1   IPV ActiveInTransVerb
 1   ISV sighs
-
 
 1   NS  SN
 1   NS  PN
