@@ -19,9 +19,9 @@
 
 # Rules for creating full sentences.
 
-1	ROOT	S .
+8	ROOT	S .
 1	ROOT	S !
-1	ROOT	is it true that S ?     # mixing terminals and nonterminals is ok.
+2	ROOT	is it true that S ?     # mixing terminals and nonterminals is ok.
 
 # The basic grammar rules.  Here's what the abbreviations stand for:
 #    S  = sentence
@@ -31,13 +31,42 @@
 #    Det = determiner (sometimes called "article")
 #    Prep = preposition
 #    Adj = adjective
+#    TP = transition phrase
+#    SP = simple past
+#    SF = simple present
 
-1	S	NP VP
-1	VP	Verb NP
-8	NP	Det Noun
+
+10	S	NP VP
+3   S   NP TerminalVerb
+2   S   SP S
+1   S   Transition S SF
+1   S   S Conj S
+
+6	VP	Verb NP
+1   VP  VerbLike Conj VerbLike
+2   VP  Verb PP
+
+3   VerbLike    Verb NP
+1   VerbLike    Verb PP
+1   VerbLike    TerminalVerb
+
+1   TP  PreTrans Trans
+
+1   SP  NP TP
+
+1   SF AdjVerb NP
+
+7	NP	Det Noun
+2   NP  Pronoun
+2   NP  PersonalNoun 
+1   NP  NP Conj NP
 1	NP	NP PP
+
 1	PP	Prep NP
-2 Noun	Adj Noun
+
+1	Noun	Adj Noun
+
+1   Adj     Adv Adj
 
 # Vocabulary.  Your program can see that "ate" is a terminal
 # symbol because there exists no rule for rewriting it.
@@ -51,8 +80,11 @@
 1	Verb	understood
 1	Verb	pickled
 
-5	Det	the
-5	Det	a
+1   TerminalVerb    sighed
+1   TerminalVerb    ate
+
+1	Det	the
+1	Det	a
 1	Det	every
 
 1	Noun	president
@@ -61,12 +93,30 @@
 1	Noun	chief of staff
 1	Noun	floor
 
+1   PersonalNoun    Sally
+
+1   PreTrans    thought
+1   PreTrans    understood
+1   PreTrans    perplexed
+
+
+1   Transition  that
+
 1	Adj	fine
 1	Adj	delicious
 1	Adj	perplexed
 1	Adj	pickled
 
+1   AdjVerb perplexed
+1   AdjVerb disappointed
+
+1   Pronoun it
+
 1	Prep	with
-2	Prep	on
-2	Prep	under
-2	Prep	in
+1	Prep	on
+1	Prep	under
+1	Prep	in
+
+1   Adv     very
+
+1   Conj    and
