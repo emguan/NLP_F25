@@ -82,7 +82,8 @@
 1   IVP     EmotionalVerb Nounlike
 1   AIVP     ActiveEmotionalVerb Nounlike
 
-8	NP	Det Noun
+4	NP	aDet ConsonantNoun
+400	NP	anDet VowelNoun
 1	NP	NP PP
 1	NP  Nounlike Conj Noun
 1	NP  Nounlike Conj NP
@@ -93,8 +94,15 @@
 1   TP  ThatVerb Trans
 1   ActiveTP  ActiveThatVerb Trans
 
+1 VowelNoun	VowelAdj VowelNoun
+1 VowelNoun VowelAdj ConsonantNoun
+1 ConsonantNoun ConsonantAdj VowelNoun
+1 ConsonantNoun ConsonantAdj ConsonantNoun
+1 ConsonantNoun Adverb VowelAdj ConsonantNoun
+1 ConsonantNoun Adverb ConsonantAdj ConsonantNoun
 
-2 Noun	Adj Noun
+1 ConsonantAdj Adverb ConsonantAdj
+
 
 # Vocabulary.  Your program can see that "ate" is a terminal
 # symbol because there exists no rule for rewriting it.
@@ -141,22 +149,27 @@
 
 1   Adverb  very
 
-1	Det	the
-1	Det	a
-1	Det	every
+1	aDet	the
+1	aDet	a
+1	aDet	every
+1	anDet	the
+400	anDet	an
+1	anDet	every
 1   Conj    and
 1   Trans   that
 
-1	Noun	president
-1	Noun	sandwich
-1	Noun	pickle
-1	Noun	chief of staff
-1	Noun	floor
-1	Noun	citizen
+1	ConsonantNoun	president
+1	ConsonantNoun	sandwich
+1	ConsonantNoun	pickle
+1	ConsonantNoun	chief of staff
+1	ConsonantNoun	floor
+1	ConsonantNoun	citizen
+1   VowelNoun   apple
 1   PersonalNoun    Sally
 1   Pronoun     it
 
-1   SN  Det Noun
+1   SN  aDet ConsonantNoun
+1   SN  anDet VowelNoun
 1   SN  Pronoun
 1   SN  PersonalNoun
 
@@ -167,10 +180,11 @@
 1   PN  chiefs of staff
 1   PN  floors
 
-1	Adj	fine
-1	Adj	delicious
-1	Adj	perplexed
-1	Adj	pickled
+1	ConsonantAdj	fine
+1	ConsonantAdj	delicious
+1	ConsonantAdj	perplexed
+1	ConsonantAdj	pickled
+5   VowelAdj    ambivalent
 
 1	Prep	with
 1	Prep	on
