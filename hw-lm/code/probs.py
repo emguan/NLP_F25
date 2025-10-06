@@ -397,7 +397,7 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
                 word_vec[token] = values
 
         self.dim: int =  int(len(vecs[0])) # TODO: SET THIS TO THE DIMENSIONALITY OF THE VECTORS
-        vecs = torch.tensor(vecs, dtype=torch.float32)
+        vecs = torch.tensor(vecs, dtype=torch.float32, device=device)
         mean_vec = vecs.mean(dim=0) # for oov
 
         if OOL in word_vec:
