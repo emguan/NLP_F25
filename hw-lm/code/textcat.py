@@ -103,11 +103,9 @@ def main():
                     "and/or you do not have an MPS-enabled device on this machine.")
             exit(1)
     torch.set_default_device(args.device)
-
-    print("Training from corpus ", file)
         
-    lm1 = LanguageModel.load(args.model1., device = args.device, weights_only = False)
-    lm2 = LanguageModel.load(args.model2, device = args.device, weights_only = False)
+    lm1 = LanguageModel.load(args.model1, device = args.device)
+    lm2 = LanguageModel.load(args.model2, device = args.device)
     
     if ("OOV" not in lm1.vocab) or ("OOV" not in lm2.vocab) or ("EOS" not in lm1.vocab) or ("EOS" not in lm2.vocab):
         log.critical("where's oov and eos")
@@ -130,9 +128,6 @@ def main():
     total_1 = 0.0
     total_2 = 0.0
 
-    correct = 0
-    incorrect = 0
-    total = 0
     for file in args.test_files:
         log_prob_1: float = file_log_prob(file, lm1)
         log_prob_2: float = file_log_prob(file, lm2)
@@ -145,7 +140,7 @@ def main():
             prior1 = math.log(pgen)
 
         if pgen == 0.0:
-            prior2 = 0
+            prior2 = 0.0
         elif pgen == 1.0:
             prior2 = -math.inf
         else:

@@ -31,7 +31,7 @@ from torch import nn
 from torch import optim
 from jaxtyping import Float
 from typeguard import typechecked
-from typing import Counter, Collection
+from typing import Collection
 from collections import Counter
 import numpy as np
 
@@ -271,7 +271,7 @@ class LanguageModel:
         if self.progress % freq == 1:
             sys.stderr.write(".")
 
-    def sample(model: LanguageModel, max_length: int = 20) -> str:
+    def sample(self, model: LanguageModel, max_length: int = 20) -> str:
         x, y = BOS, BOS
         sentence = []
 
@@ -383,41 +383,44 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
         # TODO: ADD CODE TO READ THE LEXICON OF WORD VECTORS AND STORE IT IN A USEFUL FORMAT.
         self._v2i = {w: i for i, w in enumerate(list(self.vocab))}
 
-        word_vec = {}
-        vecs = []
+        word_vec: dict[str, int] = {} 
+        vecs: list[list[float]] = []
         index = 0
-        with open(lexicon_file, "r", encoding="utf-8") as file:
-            for line in file:
-                if index == 0: 
-                    index += 1
-                    continue
-                parts = line.strip().split()
+        with open(lexicon_file, "r", encoding="utf-8") as fh:
+            first = fh.readline()
+            parts = first.strip().split()
+            header_counts = (len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit())
+            if not header_counts:
                 token = parts[0]
                 values = [float(x) for x in parts[1:]]
+                word_vec[token] = len(vecs)
                 vecs.append(values)
-                word_vec[token] = values
+            for line in fh:
+                ps = line.strip().split()
+                if not ps:
+                    continue
+                token = ps[0]
+                values = [float(x) for x in ps[1:]]
+                word_vec[token] = len(vecs)
+                vecs.append(values)
 
         self.dim: int =  int(len(vecs[0])) # TODO: SET THIS TO THE DIMENSIONALITY OF THE VECTORS
         vecs = torch.tensor(vecs, dtype=torch.float32, device = self.device)
         mean_vec = vecs.mean(dim=0) # for oov
 
-        if OOL in word_vec:
-            ool_idx = word_vec[OOL]
-        else:
-            mean_vec = vecs.mean(dim=0, keepdim=True)
-            vecs = torch.cat([vecs, mean_vec], dim=0)
-            ool_idx = vecs.size(0) - 1
+        if OOL not in word_vec:
+            import torch
+            tmp = torch.tensor(vecs, dtype=torch.float32)
+            mean_vec = tmp.mean(dim=0).tolist()
+            word_vec[OOL] = len(vecs)
+            vecs.append(mean_vec)
 
-        i2v = [None] * len(self._v2i)
-        for token, idx in self._v2i.items():
-            i2v[idx] = token
+        ool_index = word_vec[OOL]
 
-        rows = []
-        for word in list(self.vocab):
-            word_vec.get(token, ool_idx)
-            rows.append(vecs[idx])
+        E = torch.tensor(vecs, dtype=torch.float32, device=self.device)
+        rows = [E[word_vec.get(w, ool_index)] for w in list(self.vocab)] 
+        self.embeddings = torch.stack(rows, dim=0)
 
-        self.embeddings = torch.stack(rows,dim=0).to(self.device)
 
         # We wrap the following matrices in nn.Parameter objects.
         # This lets PyTorch know that these are parameters of the model
@@ -518,7 +521,7 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
         nn.init.zeros_(self.Y)   # type: ignore
 
         N = num_tokens(file)
-        log.info("Start optimizing on {N} training tokens...")
+        log.info(f"Start optimizing on {N} training tokens...")
 
         #####################
         # TODO: Implement your SGD here by taking gradient steps on a sequence
