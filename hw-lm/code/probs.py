@@ -566,7 +566,10 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
             for x,y,z in read_trigrams(file, self.vocab):
                 optimizer.zero_grad()
 
-                log_prob = self.log_prob_tensor(x,y,z)
+                if self.device == "cuda":
+                    log_prob = self.log_prob_tensor(x,y,z)
+                else: 
+                    log_prob = self.log_prob(x,y,z)
 
                 reg = 0.5 * self.l2 * (self.X.pow(2).sum() + self.Y.pow(2).sum())
                 loss = -log_prob + reg / N 

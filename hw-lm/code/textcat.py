@@ -103,10 +103,11 @@ def main():
                     "and/or you do not have an MPS-enabled device on this machine.")
             exit(1)
     torch.set_default_device(args.device)
+
+    print("Training from corpus ", file)
         
-    log.info("Testing...")
-    lm1 = LanguageModel.load(args.model1, device = args.device)
-    lm2 = LanguageModel.load(args.model2, device = args.device)
+    lm1 = LanguageModel.load(args.model1., device = args.device, weights_only = False)
+    lm2 = LanguageModel.load(args.model2, device = args.device, weights_only = False)
     
     if ("OOV" not in lm1.vocab) or ("OOV" not in lm2.vocab) or ("EOS" not in lm1.vocab) or ("EOS" not in lm2.vocab):
         log.critical("where's oov and eos")
@@ -126,7 +127,6 @@ def main():
     # the kind of log-probability that file_log_prob returns.
     # We'll print that first.
 
-    log.info("Per-file log-probabilities:")
     total_1 = 0.0
     total_2 = 0.0
 
@@ -136,7 +136,6 @@ def main():
     for file in args.test_files:
         log_prob_1: float = file_log_prob(file, lm1)
         log_prob_2: float = file_log_prob(file, lm2)
-        #print(f"{log_prob_1, log_prob_2:g}\t{file}")
 
         if pgen == 0.0:
             prior1 = -math.inf
