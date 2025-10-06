@@ -579,8 +579,7 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
             F_epoch = total_log_prob / max(1, count)
 
             print(f"epoch {i+1}: F = {F_epoch}")
-        
-
+    
         log.info("done optimizing.")
 
         # So how does the `backward` method work?
