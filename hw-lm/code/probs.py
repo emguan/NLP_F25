@@ -371,13 +371,14 @@ class BackoffAddLambdaLanguageModel(AddLambdaLanguageModel):
 class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
     # Note the use of multiple inheritance: we are both a LanguageModel and a torch.nn.Module.
     
-    def __init__(self, vocab: Vocab, lexicon_file: Path, l2: float, device, epochs: int = 10, lr: float = 0.1) -> None:
+    def __init__(self, vocab: Vocab, lexicon_file: Path, l2: float, device = "cpu", epochs: int = 10, lr: float = 0.1) -> None:
         super().__init__(vocab)
         if l2 < 0:
             raise ValueError("Negative regularization strength {l2}")
         self.l2: float = l2
         self.lr: float = float(lr)
         self.epochs = int(epochs)
+        self.device = torch.device(device)
 
         # TODO: ADD CODE TO READ THE LEXICON OF WORD VECTORS AND STORE IT IN A USEFUL FORMAT.
         self._v2i = {w: i for i, w in enumerate(list(self.vocab))}
@@ -397,7 +398,7 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
                 word_vec[token] = values
 
         self.dim: int =  int(len(vecs[0])) # TODO: SET THIS TO THE DIMENSIONALITY OF THE VECTORS
-        vecs = torch.tensor(vecs, dtype=torch.float32, device=device)
+        vecs = torch.tensor(vecs, dtype=torch.float32, device = self.device)
         mean_vec = vecs.mean(dim=0) # for oov
 
         if OOL in word_vec:
@@ -416,7 +417,7 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
             word_vec.get(token, ool_idx)
             rows.append(vecs[idx])
 
-        self.embeddings = torch.stack(rows,dim=0)
+        self.embeddings = torch.stack(rows,dim=0).to(self.device)
 
         # We wrap the following matrices in nn.Parameter objects.
         # This lets PyTorch know that these are parameters of the model
@@ -426,8 +427,8 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
         # We can also store other tensors in the model class,
         # like constant coefficients that shouldn't be altered by
         # training, but those wouldn't use nn.Parameter.
-        self.X = nn.Parameter(torch.zeros((self.dim, self.dim)), requires_grad=True)
-        self.Y = nn.Parameter(torch.zeros((self.dim, self.dim)), requires_grad=True)
+        self.X = nn.Parameter(torch.zeros((self.dim, self.dim), device=self.device), requires_grad=True)
+        self.Y = nn.Parameter(torch.zeros((self.dim, self.dim), device=self.device), requires_grad=True)
 
     def log_prob(self, x: Wordtype, y: Wordtype, z: Wordtype) -> float:
         """Return log p(z | xy) according to this language model."""

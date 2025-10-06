@@ -105,8 +105,8 @@ def main():
     torch.set_default_device(args.device)
         
     log.info("Testing...")
-    lm1 = LanguageModel.load(args.model1, device=args.device)
-    lm2 = LanguageModel.load(args.model2, device=args.device)
+    lm1 = LanguageModel.load(args.model1, device = args.device)
+    lm2 = LanguageModel.load(args.model2, device = args.device)
     
     if ("OOV" not in lm1.vocab) or ("OOV" not in lm2.vocab) or ("EOS" not in lm1.vocab) or ("EOS" not in lm2.vocab):
         log.critical("where's oov and eos")
