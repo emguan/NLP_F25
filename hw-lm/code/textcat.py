@@ -145,7 +145,7 @@ def main():
             prior2 = -math.inf
         else:
             prior2 = math.log(pspam)
-        
+         
         post_1 = prior1 + log_prob_1
         post_2 = prior2 + log_prob_2
 
@@ -168,10 +168,10 @@ def main():
     # time to print cross-entropy, we convert log base e to log base 2, 
     # by dividing by log(2).
 
-    #bits = -total_log_prob / math.log(2)   # convert to bits of surprisal
+    #bits = - file_log_prob/ math.log(2)   # convert to bits of surprisal
 
     # We also divide by the # of tokens (including EOS tokens) to get
-    # bits per token.  (The division happens within the print statement.)
+    # bits per token.  (The division happens within the print statement.
 
     #tokens = sum(num_tokens(test_file) for test_file in args.test_files)
     #print(f"Overall cross-entropy:\t{bits / tokens:.5f} bits per token")

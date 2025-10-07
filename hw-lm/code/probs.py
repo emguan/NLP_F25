@@ -239,7 +239,7 @@ class LanguageModel:
     @classmethod
     def load(cls, model_path: Path, device: str = 'cpu') -> "LanguageModel":
         log.info(f"Loading model from {model_path}")
-        model = torch.load(model_path, map_location=device)
+        model = torch.load(model_path, map_location=device, weights_only = False)
             # torch.load is similar to pickle.load but handles tensors too
             # map_location allows loading tensors on different device than saved
         if not isinstance(model, cls):
@@ -369,7 +369,7 @@ class BackoffAddLambdaLanguageModel(AddLambdaLanguageModel):
 
 
 class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
-    # Note the use of multiple inheritance: we are both a LanguageModel and a torch.nn.Module.
+    # Note the use of multiple inheritance: we are both a LanguageModel and a .nn.Module.
     
     def __init__(self, vocab: Vocab, lexicon_file: Path, l2: float, device = "cpu", epochs: int = 10, lr: float = 0.1) -> None:
         super().__init__(vocab)
@@ -383,43 +383,54 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
         # TODO: ADD CODE TO READ THE LEXICON OF WORD VECTORS AND STORE IT IN A USEFUL FORMAT.
         self._v2i = {w: i for i, w in enumerate(list(self.vocab))}
 
-        word_vec: dict[str, int] = {} 
-        vecs: list[list[float]] = []
-        index = 0
+        # 1) Parse lexicon: place indices into word_vec and values into vecs (list)
+        word_vec: dict[str, int] = {}      # token -> row index in vecs
+        vecs: list[list[float]] = []       # list of vectors (rows)
+
         with open(lexicon_file, "r", encoding="utf-8") as fh:
             first = fh.readline()
-            parts = first.strip().split()
-            header_counts = (len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit())
-            if not header_counts:
-                token = parts[0]
-                values = [float(x) for x in parts[1:]]
-                word_vec[token] = len(vecs)
-                vecs.append(values)
-            for line in fh:
-                ps = line.strip().split()
-                if not ps:
-                    continue
-                token = ps[0]
-                values = [float(x) for x in ps[1:]]
-                word_vec[token] = len(vecs)
-                vecs.append(values)
+            if first:
+                parts = first.strip().split()
+                # Optional header like: "<num_words> <dim>"
+                header_counts = (len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit())
+                if not header_counts:
+                    token = parts[0]
+                    values = [float(x) for x in parts[1:]]
+                    word_vec[token] = len(vecs)
+                    vecs.append(values)
+                for line in fh:
+                    ps = line.strip().split()
+                    if not ps:
+                        continue
+                    token = ps[0]
+                    values = [float(x) for x in ps[1:]]
+                    word_vec[token] = len(vecs)
+                    vecs.append(values)
 
-        self.dim: int =  int(len(vecs[0])) # TODO: SET THIS TO THE DIMENSIONALITY OF THE VECTORS
-        vecs = torch.tensor(vecs, dtype=torch.float32, device = self.device)
-        mean_vec = vecs.mean(dim=0) # for oov
+        if not vecs:
+            raise ValueError("Lexicon appears empty or malformed.")
 
+        # 2) Dimension + sanity check (all rows must have same length)
+        self.dim = len(vecs[0])
+        for i, v in enumerate(vecs):
+            if len(v) != self.dim:
+                raise ValueError(f"Lexicon row {i} has dim {len(v)} != {self.dim}")
+
+        # 3) Convert once to a tensor on the target device
+        E_tensor = torch.tensor(vecs, dtype=torch.float32, device=self.device)  # [L, dim]
+
+        # 4) Ensure OOL exists; if missing, add mean vector as OOL row at the end
         if OOL not in word_vec:
-            import torch
-            tmp = torch.tensor(vecs, dtype=torch.float32)
-            mean_vec = tmp.mean(dim=0).tolist()
-            word_vec[OOL] = len(vecs)
-            vecs.append(mean_vec)
+            mean_vec = E_tensor.mean(dim=0)               # [dim]
+            word_vec[OOL] = E_tensor.size(0)              # new row index
+            E_tensor = torch.cat([E_tensor, mean_vec.unsqueeze(0)], dim=0)
 
         ool_index = word_vec[OOL]
 
-        E = torch.tensor(vecs, dtype=torch.float32, device=self.device)
-        rows = [E[word_vec.get(w, ool_index)] for w in list(self.vocab)] 
-        self.embeddings = torch.stack(rows, dim=0)
+        # 5) Build embedding matrix aligned to self.vocab (use OOL for missing tokens)
+        rows = [E_tensor[word_vec.get(w, ool_index)] for w in list(self.vocab)]
+        self.embeddings = torch.stack(rows, dim=0)  # [V, dim]
+
 
 
         # We wrap the following matrices in nn.Parameter objects.
@@ -569,23 +580,21 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
             for x,y,z in read_trigrams(file, self.vocab):
                 optimizer.zero_grad()
 
-                if self.device == "cuda":
-                    log_prob = self.log_prob_tensor(x,y,z)
-                else: 
-                    log_prob = self.log_prob(x,y,z)
-
+                log_prob_tensor = self.log_prob_tensor(x, y, z)  # no device check
                 reg = 0.5 * self.l2 * (self.X.pow(2).sum() + self.Y.pow(2).sum())
-                loss = -log_prob + reg / N 
+                loss = -log_prob_tensor + reg / max(1, N)
+
 
                 loss.backward()
                 optimizer.step()
 
-                total_log_prob += log_prob.item()
+                total_log_prob += loss
                 count += 1
 
             F_epoch = total_log_prob / max(1, count)
 
             print(f"epoch {i+1}: F = {F_epoch}")
+        
     
         log.info("done optimizing.")
 
@@ -638,4 +647,12 @@ class ImprovedLogLinearLanguageModel(EmbeddingLogLinearLanguageModel):
     # * You could use a different optimization algorithm instead of SGD, such
     #   as `torch.optim.Adam` (https://pytorch.org/docs/stable/optim.html).
     #
-    pass
+     def __init__(self, vocab: Vocab, lexicon_file: Path, l2: float,
+                 device: str = "cpu", epochs: int = 10, lr: float = 1e-3) -> None:
+        # IMPORTANT: initialize BOTH parents in multiple inheritance
+        LanguageModel.__init__(self, vocab)
+        nn.Module.__init__(self)
+        self.l2 = float(l2)
+        self.lr = float(lr)
+        self.epochs = int(epochs)
+        self.device = torch.device(device)
