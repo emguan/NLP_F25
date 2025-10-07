@@ -407,31 +407,20 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
                     word_vec[token] = len(vecs)
                     vecs.append(values)
 
-        if not vecs:
-            raise ValueError("Lexicon appears empty or malformed.")
 
-        # 2) Dimension + sanity check (all rows must have same length)
         self.dim = len(vecs[0])
-        for i, v in enumerate(vecs):
-            if len(v) != self.dim:
-                raise ValueError(f"Lexicon row {i} has dim {len(v)} != {self.dim}")
 
-        # 3) Convert once to a tensor on the target device
-        E_tensor = torch.tensor(vecs, dtype=torch.float32, device=self.device)  # [L, dim]
+        embed_t = torch.tensor(vecs, dtype=torch.float32, device=self.device) 
 
-        # 4) Ensure OOL exists; if missing, add mean vector as OOL row at the end
         if OOL not in word_vec:
-            mean_vec = E_tensor.mean(dim=0)               # [dim]
-            word_vec[OOL] = E_tensor.size(0)              # new row index
-            E_tensor = torch.cat([E_tensor, mean_vec.unsqueeze(0)], dim=0)
+            mean_vec = embed_t.mean(dim=0)  
+            word_vec[OOL] = embed_t.size(0)  
+            embed_t = torch.cat([embed_t, mean_vec.unsqueeze(0)], dim=0)
 
         ool_index = word_vec[OOL]
 
-        # 5) Build embedding matrix aligned to self.vocab (use OOL for missing tokens)
-        rows = [E_tensor[word_vec.get(w, ool_index)] for w in list(self.vocab)]
-        self.embeddings = torch.stack(rows, dim=0)  # [V, dim]
-
-
+        rows = [embed_t[word_vec.get(w, ool_index)] for w in list(self.vocab)]
+        self.embeddings = torch.stack(rows, dim=0) 
 
         # We wrap the following matrices in nn.Parameter objects.
         # This lets PyTorch know that these are parameters of the model
@@ -584,7 +573,6 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
                 reg = 0.5 * self.l2 * (self.X.pow(2).sum() + self.Y.pow(2).sum())
                 loss = -log_prob_tensor + reg / max(1, N)
 
-
                 loss.backward()
                 optimizer.step()
 
@@ -594,7 +582,7 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
             F_epoch = total_log_prob / max(1, count)
 
             print(f"epoch {i+1}: F = {F_epoch}")
-        
+    
     
         log.info("done optimizing.")
 
@@ -647,7 +635,8 @@ class ImprovedLogLinearLanguageModel(EmbeddingLogLinearLanguageModel):
     # * You could use a different optimization algorithm instead of SGD, such
     #   as `torch.optim.Adam` (https://pytorch.org/docs/stable/optim.html).
     #
-     def __init__(self, vocab: Vocab, lexicon_file: Path, l2: float,
+
+    def __init__(self, vocab: Vocab, lexicon_file: Path, l2: float,
                  device: str = "cpu", epochs: int = 10, lr: float = 1e-3) -> None:
         # IMPORTANT: initialize BOTH parents in multiple inheritance
         LanguageModel.__init__(self, vocab)
@@ -656,3 +645,90 @@ class ImprovedLogLinearLanguageModel(EmbeddingLogLinearLanguageModel):
         self.lr = float(lr)
         self.epochs = int(epochs)
         self.device = torch.device(device)
+
+        # too lazy = copy&paste
+
+        self._v2i = {w: i for i, w in enumerate(list(self.vocab))}
+
+        word_vec: dict[str, int] = {}
+        vecs: list[list[float]] = []
+        with open(lexicon_file, "r", encoding="utf-8") as fh:
+            first = fh.readline()
+            parts = first.strip().split()
+            header_counts = (len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit())
+            if not header_counts:
+                token = parts[0]
+                values = [float(x) for x in parts[1:]]
+                word_vec[token] = len(vecs)
+                vecs.append(values)
+            for line in fh:
+                ps = line.strip().split()
+                if not ps:
+                    continue
+                token = ps[0]
+                values = [float(x) for x in ps[1:]]
+                word_vec[token] = len(vecs)
+                vecs.append(values)
+
+        self.dim = len(vecs[0])
+        
+        embed_t = torch.tensor(vecs, dtype=torch.float32, device=self.device)
+        if OOL not in word_vec:
+            mean_vec = embed_t.mean(dim=0)
+            word_vec[OOL] = embed_t.size(0)
+            embed_t = torch.cat([embed_t, mean_vec.unsqueeze(0)], dim=0)
+        ool_index = word_vec[OOL]
+
+        rows = [embed_t[word_vec.get(w, ool_index)] for w in list(self.vocab)]
+        self.embeddings = torch.stack(rows, dim=0) 
+
+        self.X = nn.Parameter(torch.empty((self.dim, self.dim), device=self.device))
+        self.Y = nn.Parameter(torch.empty((self.dim, self.dim), device=self.device))
+        self.b = nn.Parameter(torch.zeros((len(self.vocab),), device=self.device)) #added a bias term
+
+        # Xavier initialization (not using he bc relu is not being used (thanks professor unberath))
+        for M in (self.X, self.Y, self.Z):
+            nn.init.xavier_uniform_(M)
+
+        self.to(self.device)
+
+    def logits(self, x: Wordtype, y: Wordtype) -> Float[torch.Tensor, "vocab"]:
+        xi = self._v2i.get(x, self._v2i[OOV])
+        yi = self._v2i.get(y, self._v2i[OOV])
+
+        embeddings_x = self.embeddings[xi] 
+        embeddings_y = self.embeddings[yi]
+        exy = embeddings_x * embeddings_y
+        
+        h = (self.X @ embeddings_x) + (self.Y @ embeddings_y) + (self.Z @ exy)   # [D]
+        scores = (self.embeddings @ h) + self.b #add da bias 👹
+        return scores
+
+    def train(self, file: Path): 
+
+        optimizer = optim.Adam(self.parameters(), lr=self.lr) #unberath
+        N = num_tokens(file)
+
+        trigs = list(read_trigrams(file, self.vocab))
+
+        for epoch in range(1, self.epochs + 1):
+            random.shuffle(trigs)
+
+            total_loss = 0.0
+            count = 0
+
+            for (x, y, z) in trigs:
+                optimizer.zero_grad()
+                lp = self.log_prob_tensor(x, y, z) 
+                reg = 0.5 * self.l2 * (
+                    self.X.pow(2).sum() + self.Y.pow(2).sum() + self.Z.pow(2).sum() + self.b.pow(2).sum()
+                )
+                loss = -lp + reg / max(1, N)
+                loss.backward()
+                optimizer.step()
+
+                total_loss += float(loss.detach())
+                count += 1
+
+            avg = total_loss / max(1, count)
+            print(f"epoch {epoch}: loss={avg:.5f}")
