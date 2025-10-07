@@ -55,7 +55,7 @@ def file_log_prob(file: Path, lm: LanguageModel) -> float:
 
     x: Wordtype; y: Wordtype; z: Wordtype    # type annotation for loop variables below
     for (x, y, z) in read_trigrams(file, lm.vocab):
-        log_prob += lm.log_prob(x, y, z)  # log p(z | xy)
+        log_prob +=  lm.log_prob(x,y,z)  # log p(z | xy)
 
         # If the factor p(z | xy) = 0, then it will drive our cumulative file 
         # probability to 0 and our cumulative log_prob to -infinity.  In 

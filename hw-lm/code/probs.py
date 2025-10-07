@@ -685,7 +685,8 @@ class ImprovedLogLinearLanguageModel(EmbeddingLogLinearLanguageModel):
 
         self.X = nn.Parameter(torch.empty((self.dim, self.dim), device=self.device))
         self.Y = nn.Parameter(torch.empty((self.dim, self.dim), device=self.device))
-        self.b = nn.Parameter(torch.zeros((len(self.vocab),), device=self.device)) #added a bias term
+        self.Z = nn.Parameter(torch.empty((self.dim, self.dim), device=self.device))
+        self.b = nn.Parameter(torch.zeros((len(self.vocab),), device=self.device)) # bias
 
         # Xavier initialization (not using he bc relu is not being used (thanks professor unberath))
         for M in (self.X, self.Y, self.Z):
@@ -705,62 +706,63 @@ class ImprovedLogLinearLanguageModel(EmbeddingLogLinearLanguageModel):
         scores = (self.embeddings @ h) + self.b #add da bias 👹
         return scores
 
-    def train(self, file: Path, * , eta0: float = 1e-1, C: float = 1.0,            
-          minibatch: int = 1, shuffle: bool = True): 
+    def train(self, file: Path, *, eta0: float = 1e-1, C: float = 1.0,
+          minibatch: int = 1, shuffle: bool = True) -> None:
+        N = num_tokens(file)
+        V = len(self.vocab)
+        device = self.device
+        steps = max(1, self.epochs * N // max(1, minibatch))
 
-    N = num_tokens(file)       
-    V = len(self.vocab)
-    device = self.device
+        optimizer = ConvergentSGD(self.parameters(), eta0=eta0, lambda_=(2.0 * C / max(1, N)))
 
-    optimizer = ConvergentSGD(self.parameters(), eta0=eta0, lambda_=(2.0 * C / max(1, N)))
+        trig_iter = draw_trigrams_forever(file, self.vocab, randomize=shuffle)
 
-    draw_trig_forever = draw_trigrams_forever(file, self.vocab, randomize=shuffle)
+        nn.Module.train(self, True)
 
-    self.train()  
-    running_loss = 0.0
+        running_loss = 0.0
 
-    for t in range(1, steps + 1):
-        optimizer.zero_grad()
+        for t in range(1, steps + 1):
+            optimizer.zero_grad()
 
-        xs, ys, zs = [], [], []
-        for _ in range(minibatch):
-            x, y, z = next(trig_iter)
-            xs.append(self._v2i.get(x, self._v2i[OOV]))
-            ys.append(self._v2i.get(y, self._v2i[OOV]))
-            zs.append(self._v2i.get(z, self._v2i[OOV]))
+            xs, ys, zs = [], [], []
+            for _ in range(minibatch):
+                x, y, z = next(trig_iter)            
+                xs.append(self._v2i.get(x, self._v2i[OOV]))
+                ys.append(self._v2i.get(y, self._v2i[OOV]))
+                zs.append(self._v2i.get(z, self._v2i[OOV]))
 
-        xs_t = torch.tensor(xs, dtype=torch.long, device=device)   
-        ys_t = torch.tensor(ys, dtype=torch.long, device=device)   
-        zs_t = torch.tensor(zs, dtype=torch.long, device=device)   
+            xs_t = torch.tensor(xs, dtype=torch.long, device=device)   
+            ys_t = torch.tensor(ys, dtype=torch.long, device=device)   
+            zs_t = torch.tensor(zs, dtype=torch.long, device=device)   
 
-        embeddings_x = self.embeddings[xs_t]     
-        eembeddings_y = self.embeddings[ys_t]     
-        
-        h = (embeddings_x @ self.X.T) + (eembeddings_y @ self.Y.T)  
-        if hasattr(self, "Z"):
-            h = h + ( (embeddings_x * eembeddings_y) @ self.Z.T )  
-        if hasattr(self, "W"):    
-            h = torch.relu(self.W(h))
+            ex = self.embeddings[xs_t]               
+            ey = self.embeddings[ys_t]             
+            exy = ex * ey                             
 
-        scores = h @ self.embeddings.T
-        scores = scores + self.b
+            h = (ex @ self.X.T) + (ey @ self.Y.T)   
+            if hasattr(self, "Z"):
+                h = h + (exy @ self.Z.T)           
 
-        log_probs = torch.log_softmax(scores, dim=1) 
-        nll = -log_probs[torch.arange(minibatch, device=device), zs_t]  
-        data_loss = nll.mean()                        
+            scores = h @ self.embeddings.T            
+            if hasattr(self, "b"):
+                scores = scores + self.b             
 
-        reg_terms = []
-        for name, p in self.named_parameters():
-            if p.requires_grad and p.dim() > 0:
-                reg_terms.append(p.pow(2).sum())
-        reg = 0.5 * (2.0 * C / max(1, N)) * (torch.stack(reg_terms).sum() if reg_terms else torch.tensor(0.0, device=device))
+            log_probs = torch.log_softmax(scores, dim=1)
+            nll = -log_probs[torch.arange(minibatch, device=device), zs_t]
+            data_loss = nll.mean()
 
-        loss = data_loss + reg
-        loss.backward()
+            reg_terms = []
+            for p in self.parameters():
+                if p.requires_grad and p.dim() > 0:
+                    reg_terms.append(p.pow(2).sum())
+            reg = 0.5 * (2.0 * C / max(1, N)) * (torch.stack(reg_terms).sum() if reg_terms
+                                                else torch.tensor(0.0, device=device))
 
-        optimizer.step()
+            loss = data_loss + reg
 
-        running_loss += float(loss.detach())
+            loss.backward()
+            optimizer.step()
 
-        print(f"[SGD] step {t}/{steps}  loss={avg:.6f}  (data={float(data_loss):.6f})")
-
+            running_loss += float(loss.detach())
+            avg = running_loss / t
+            print(f"[SGD] step {t}/{steps}  loss={avg:.6f}  (data={float(data_loss):.6f})")
