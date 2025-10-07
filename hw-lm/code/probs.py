@@ -706,8 +706,8 @@ class ImprovedLogLinearLanguageModel(EmbeddingLogLinearLanguageModel):
         scores = (self.embeddings @ h) + self.b #add da bias 👹
         return scores
 
-    def train(self, file: Path, *, eta0: float = 1e-1, C: float = 1.0,
-          minibatch: int = 1, shuffle: bool = True) -> None:
+    def train(self, file: Path, *, eta0: float = 1e-1, C: float = 1.0, minibatch: int = 1, shuffle: bool = True) -> None:
+        
         N = num_tokens(file)
         V = len(self.vocab)
         device = self.device
