@@ -372,7 +372,7 @@ class BackoffAddLambdaLanguageModel(AddLambdaLanguageModel):
 class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
     # Note the use of multiple inheritance: we are both a LanguageModel and a .nn.Module.
     
-    def __init__(self, vocab: Vocab, lexicon_file: Path, l2: float, device = "cpu", epochs: int = 10, lr: float = 0.1) -> None:
+    def __init__(self, vocab: Vocab, lexicon_file: Path, l2: float, device, epochs: int = 10, lr: float = 0.1) -> None:
         super().__init__(vocab)
         if l2 < 0:
             raise ValueError("Negative regularization strength {l2}")
@@ -421,7 +421,7 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
         ool_index = word_vec[OOL]
 
         rows = [embed_t[word_vec.get(w, ool_index)] for w in list(self.vocab)]
-        self.embeddings = torch.stack(rows, dim=0) 
+        self.embeddings = torch.stack(rows, dim=0, device = self.device) 
 
         # We wrap the following matrices in nn.Parameter objects.
         # This lets PyTorch know that these are parameters of the model
@@ -499,7 +499,7 @@ class EmbeddingLogLinearLanguageModel(LanguageModel, nn.Module):
 
         logits = self.embeddings @ ((self.X @ embedding_x) + (self.Y @ embedding_y))
 
-        return logits 
+        return logits
 
     def train(self, file: Path):    # type: ignore
         

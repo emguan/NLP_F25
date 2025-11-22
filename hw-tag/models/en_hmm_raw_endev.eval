@@ -1,0 +1,35 @@
+Cross-entropy: 10.8059 nats (= perplexity 49308.796)
+Cross-entropy: 6.3845 nats (= perplexity 592.585)
+Cross-entropy: 6.3586 nats (= perplexity 577.410)
+Cross-entropy: 6.3431 nats (= perplexity 568.562)
+Cross-entropy: 6.3318 nats (= perplexity 562.180)
+Cross-entropy: 6.3227 nats (= perplexity 557.057)
+Cross-entropy: 6.3148 nats (= perplexity 552.676)
+Cross-entropy: 6.3078 nats (= perplexity 548.850)
+Total training time: 0:14:00
+---
+Wrote tagging to models/en_hmm_raw_endev.output
+Cross-entropy: 6.3078 nats (= perplexity 548.850)
+Tagging accuracy: all: 92.125%, known: 96.465%, seen: nan%, novel: 47.154%
+===
+Cross-entropy: 10.8059 nats (= perplexity 49308.796)
+Cross-entropy: 6.4435 nats (= perplexity 628.609)
+Cross-entropy: 6.4179 nats (= perplexity 612.715)
+Cross-entropy: 6.4030 nats (= perplexity 603.681)
+Cross-entropy: 6.3927 nats (= perplexity 597.439)
+Total training time: 0:10:55
+---
+Wrote tagging to models/en_hmm_raw_endev.output
+Cross-entropy: 6.3927 nats (= perplexity 597.439)
+Tagging accuracy: all: 92.092%, known: 96.681%, seen: nan%, novel: 44.545%
+===
+Cross-entropy: 10.8059 nats (= perplexity 49308.796)
+Cross-entropy: 7.4645 nats (= perplexity 1744.945)
+Cross-entropy: 7.4464 nats (= perplexity 1713.709)
+Cross-entropy: 7.4394 nats (= perplexity 1701.653)
+Total training time: 0:06:02
+---
+Wrote tagging to models/en_hmm_raw_endev.output
+Cross-entropy: 7.4394 nats (= perplexity 1701.653)
+Tagging accuracy: all: 88.484%, known: 93.787%, seen: nan%, novel: 33.539%
+===

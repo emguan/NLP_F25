@@ -1,0 +1,15 @@
+Cross-entropy: 1.5612 nats (= perplexity 4.764)
+Cross-entropy: 0.4829 nats (= perplexity 1.621)
+Cross-entropy: 0.4901 nats (= perplexity 1.632)
+Cross-entropy: 0.5729 nats (= perplexity 1.773)
+Cross-entropy: 0.4484 nats (= perplexity 1.566)
+Cross-entropy: 0.4331 nats (= perplexity 1.542)
+Cross-entropy: 0.4244 nats (= perplexity 1.529)
+Cross-entropy: 0.4220 nats (= perplexity 1.525)
+Cross-entropy: 0.4217 nats (= perplexity 1.525)
+Total training time: 0:16:36
+---
+Wrote tagging to unigrams/en_crf_raw_endev.output
+Cross-entropy: 0.4217 nats (= perplexity 1.525)
+Tagging accuracy: all: 85.239%, known: 88.055%, seen: nan%, novel: 56.072%
+===

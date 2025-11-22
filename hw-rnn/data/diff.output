@@ -1,0 +1,2 @@
+python3 code/tag.py data/endev --model models/en_crf.pkl --crf --train data/ensup
+python3 code/tag.py data/endev --model models/en_crf_raw.pkl --crf --checkpoint models/en_crf.pkl --train data/ensup data/enraw
