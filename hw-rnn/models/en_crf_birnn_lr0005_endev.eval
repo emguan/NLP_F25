@@ -1,0 +1,23 @@
+Cross-entropy: 3.2114 nats (= perplexity 24.815)
+Cross-entropy: 1.3035 nats (= perplexity 3.682)
+Cross-entropy: 0.9078 nats (= perplexity 2.479)
+Cross-entropy: 0.7630 nats (= perplexity 2.145)
+Cross-entropy: 0.6904 nats (= perplexity 1.995)
+Cross-entropy: 0.6540 nats (= perplexity 1.923)
+Cross-entropy: 0.6227 nats (= perplexity 1.864)
+Cross-entropy: 0.6087 nats (= perplexity 1.838)
+Cross-entropy: 0.5886 nats (= perplexity 1.802)
+Cross-entropy: 0.5762 nats (= perplexity 1.779)
+Cross-entropy: 0.5635 nats (= perplexity 1.757)
+Cross-entropy: 0.5544 nats (= perplexity 1.741)
+Cross-entropy: 0.5464 nats (= perplexity 1.727)
+Cross-entropy: 0.5388 nats (= perplexity 1.714)
+Cross-entropy: 0.5309 nats (= perplexity 1.700)
+Cross-entropy: 0.5253 nats (= perplexity 1.691)
+Cross-entropy: 0.5210 nats (= perplexity 1.684)
+Cross-entropy: 0.5159 nats (= perplexity 1.675)
+Cross-entropy: 0.5073 nats (= perplexity 1.661)
+Cross-entropy: 0.5078 nats (= perplexity 1.662)
+Total training time: 2:48:12
+---
+Wrote tagging to ../models/en_crf_birnn_lr0005_endev.output

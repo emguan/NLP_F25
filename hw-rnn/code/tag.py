@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """
 Command-line interface for training and evaluating HMM and CRF taggers.
+
+python3 tag.py ../data/endev --train ../data/ensup --crf --model ../models/en_crf_backprop.pkl
+python3 tag.py ../data/icdev --train ../data/icsup --crf --model ../models/ic_crf_backprop.pkl
+
 """
 import argparse
 import logging
@@ -257,8 +261,8 @@ def parse_args() -> argparse.Namespace:
             args.new_model_class = HiddenMarkovModel
     else:                   # create some sort of CRF
         if args.rnn_dim or args.lexicon or args.problex:
-            #from crf_neural import ConditionalRandomFieldNeural  # module provided with hw-rnn homework
-            from crf_test import ConditionalRandomFieldTest as ConditionalRandomFieldNeural
+            from crf_neural import ConditionalRandomFieldNeural  # module provided with hw-rnn homework
+            # from crf_test import ConditionalRandomFieldTest as ConditionalRandomFieldNeural
             args.new_model_class = ConditionalRandomFieldNeural
         else: 
             args.new_model_class = ConditionalRandomField          

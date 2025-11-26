@@ -1,0 +1,17 @@
+Cross-entropy: 3.2621 nats (= perplexity 26.103)
+Cross-entropy: 1.0014 nats (= perplexity 2.722)
+Cross-entropy: 0.6703 nats (= perplexity 1.955)
+Cross-entropy: 0.5672 nats (= perplexity 1.763)
+Cross-entropy: 0.5051 nats (= perplexity 1.657)
+Cross-entropy: 0.4784 nats (= perplexity 1.613)
+Cross-entropy: 0.4550 nats (= perplexity 1.576)
+Cross-entropy: 0.4447 nats (= perplexity 1.560)
+Cross-entropy: 0.4242 nats (= perplexity 1.528)
+Cross-entropy: 0.4150 nats (= perplexity 1.514)
+Cross-entropy: 0.4183 nats (= perplexity 1.519)
+Total training time: 1:35:55
+---
+Wrote tagging to ../models/en_crf_birnn_rnn16_endev.output
+Cross-entropy: 0.4183 nats (= perplexity 1.519)
+Tagging accuracy: all: 84.638%, known: 85.834%, seen: 67.542%, novel: 76.125%
+===

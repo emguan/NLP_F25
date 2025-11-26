@@ -232,4 +232,3 @@ class ConditionalRandomFieldBackprop(ConditionalRandomField, nn.Module):
         return lr * sum(torch.sum(p.grad * p.grad).item()   # squared norm of p, as a float
                         for p in self.parameters() 
                         if p.grad is not None) / minibatch_size
-        

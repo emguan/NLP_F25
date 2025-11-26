@@ -320,4 +320,28 @@ class ConditionalRandomField(HiddenMarkovModel):
         # didn't bother to implement this here,
         # but see nice implementation and documentation in 
         # ConditionalRandomFieldBackprop subclass
-        return torch.nan
+        grad_WA = self.A_counts if not self.unigram else self.A_counts.sum(dim=0, keepdim=True)
+        grad_WB = self.B_counts
+
+        # ΔW = lr * grad
+        # Learning speed = (ΔW ⋅ grad) / minibatch_size
+        # = lr * (||grad||^2) / minibatch_size
+
+        speed_WA = (lr * grad_WA * grad_WA).sum()
+        speed_WB = (lr * grad_WB * grad_WB).sum()
+
+        speed = speed_WA + speed_WB
+
+        return (speed / minibatch_size).item()
+
+    def setup_sentence(self, isent):
+        # Convert word IDs to embeddings
+        embs = self.lexicon.embs(isent)   # shape: [T, emb_dim]
+
+        # Run BiRNN
+        h_fwd, h_bwd = self.rnn(embs)
+
+        # Store them for A_at and B_at
+        self.h_fwd = h_fwd
+        self.h_bwd = h_bwd
+        self.h = torch.cat([h_fwd, h_bwd], dim=1)

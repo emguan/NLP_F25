@@ -1,0 +1,17 @@
+Cross-entropy: -inf nats (= perplexity 0.000)
+Cross-entropy: -inf nats (= perplexity 0.000)
+Cross-entropy: 3.1039 nats (= perplexity 22.285)
+Cross-entropy: 0.3503 nats (= perplexity 1.420)
+Cross-entropy: 0.2624 nats (= perplexity 1.300)
+Cross-entropy: 0.2433 nats (= perplexity 1.275)
+Cross-entropy: 0.2449 nats (= perplexity 1.278)
+Total training time: 0:36:55
+---
+Wrote tagging to ../models/en_crf_birnn_endev.output
+Cross-entropy: 0.2449 nats (= perplexity 1.278)
+Tagging accuracy: all: 92.317%, known: 93.769%, seen: 78.992%, novel: 75.865%
+===
+Wrote tagging to ../models/en_crf_birnn_endev.output
+Cross-entropy: 0.2449 nats (= perplexity 1.278)
+Tagging accuracy: all: 92.317%, known: 93.151%, seen: nan%, novel: 75.865%
+===

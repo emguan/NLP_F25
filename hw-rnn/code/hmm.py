@@ -251,55 +251,47 @@ class HiddenMarkovModel:
         so that they can subsequently be used by the backward pass."""
         
         # Preallocate alpha vectors
+        self.setup_sentence(isent)
         alpha = [torch.zeros(self.k) for _ in isent]
-        alpha[0][self.bos_t] = 1.0  # One-hot at BOS
-        
+        alpha[0][self.bos_t] = 1.0
+
         log_Z_components = []
-        
-        # Forward loop
+
         for j in range(1, len(isent)):
             w_j, t_j = isent[j]
-            
-             # Get emission probabilities
-            if w_j >= self.V:  # Boundary word (BOS_WORD or EOS_WORD)
+
+            # use non-stationary B
+            B = self.B_at(j, isent)
+            if w_j >= self.V:
                 emission = torch.zeros(self.k)
-                if w_j == self.V:  # EOS_WORD
-                    emission[self.eos_t] = 1.0
-                else:  # BOS_WORD
-                    emission[self.bos_t] = 1.0
+                if w_j == self.V: emission[self.eos_t] = 1.0
+                else: emission[self.bos_t] = 1.0
             else:
-                emission = self.B[:, w_j]
-            
-            # α(j) = (α(j-1) · A) ⊙ B[:, w_j]
-            alpha[j] = (alpha[j-1] @ self.A) * emission
-            
-            # If supervised, restrict to observed tag
+                emission = B[:, w_j]
+
+            # use non-stationary A
+            A = self.A_at(j, isent)
+
+            alpha[j] = (alpha[j-1] @ A) * emission
+
             if t_j is not None:
                 mask = torch.zeros(self.k)
                 mask[t_j] = 1.0
-                alpha[j] = alpha[j] * mask
-            
-            # Scaling trick (Section C.1)
+                alpha[j] *= mask
+
             kappa_j = alpha[j].sum()
             if kappa_j > 0:
                 log_Z_components.append(torch.log(kappa_j))
-                alpha[j] = alpha[j] / kappa_j
+                alpha[j] /= kappa_j
             else:
                 log_Z_components.append(torch.tensor(float('-inf')))
-        
-        # Final log Z
-        final_prob = alpha[-1][self.eos_t]
-        if final_prob > 0:
-            log_Z = torch.log(final_prob) + sum(log_Z_components)
-        else:
-            log_Z = torch.tensor(float('-inf'))
-        
-        # Save for backward pass
+
         self.alpha = alpha
         self.log_Z_components = log_Z_components
-        self.log_Z = log_Z
-        
-        return log_Z
+
+        final_prob = alpha[-1][self.eos_t]
+        return torch.log(final_prob + 1e-45) + sum(log_Z_components)
+
 
 
     @typechecked
@@ -317,7 +309,6 @@ class HiddenMarkovModel:
         
         When the logging level is set to DEBUG, the beta vectors and posterior counts
         are logged.  You can check this against the ice cream spreadsheet."""
-        
         alpha = self.alpha
         log_Z_components = self.log_Z_components
         
@@ -330,17 +321,17 @@ class HiddenMarkovModel:
         
         # Backward loop
         for j in range(len(isent) - 1, 0, -1):
+            B = self.B_at(j, isent)
+            A = self.A_at(j, isent)
             w_j, t_j = isent[j]
             
             # Get emission probabilities
             if w_j >= self.V:
                 emission = torch.zeros(self.k)
-                if w_j == self.V:
-                    emission[self.eos_t] = 1.0
-                else:
-                    emission[self.bos_t] = 1.0
+                if w_j == self.V: emission[self.eos_t] = 0.0
+                else: emission[self.bos_t] = 0.0
             else:
-                emission = self.B[:, w_j]
+                emission = B[:, w_j]
             
             # Posterior at position j: γ(j) = α(j) ⊙ β(j) / Z
             gamma = (alpha[j] * beta[j]) / (Z_scaled + 1e-45)
@@ -356,10 +347,10 @@ class HiddenMarkovModel:
             kappa_j = torch.exp(log_Z_components[j-1]) if (j-1) < len(log_Z_components) else torch.tensor(1.0)
             
             xi = (
-                alpha[j-1].unsqueeze(1) *  # α_s(j-1)
-                self.A *                    # A[s,t]
-                emission.unsqueeze(0) *     # B[t, w_j]
-                beta[j].unsqueeze(0)        # β_t(j)
+                alpha[j-1].unsqueeze(1)
+                * A
+                * emission.unsqueeze(0)
+                * beta[j].unsqueeze(0)
             ) / (kappa_j * Z_scaled + 1e-45)
             
             if t_j is None:
@@ -368,10 +359,10 @@ class HiddenMarkovModel:
                 self.A_counts[:, t_j] += mult * xi[:, t_j]
             
             # Update beta (Algorithm 4, line 12)
-            beta[j-1] = self.A @ (emission * beta[j])
+            beta[j-1] = A @ (emission * beta[j])
             if kappa_j > 0:
-                beta[j-1] = beta[j-1] / kappa_j
-        
+                beta[j-1] /= kappa_j
+                    
         # Compute log Z from backward (for verification)
         log_Z_backward = torch.log(Z_scaled + 1e-45) + sum(log_Z_components)
         
@@ -379,7 +370,7 @@ class HiddenMarkovModel:
 
     def viterbi_tagging(self, sentence: Sentence, corpus: TaggedCorpus) -> Sentence:
         isent = self._integerize_sentence(sentence, corpus)
-
+        self.setup_sentence(isent)
         assert self.eos_t is not None
         
         # Work in LOG-SPACE to prevent underflow
@@ -391,19 +382,18 @@ class HiddenMarkovModel:
         
         # Forward max-sum (in log space)
         for j in range(1, len(isent)):
-            A = self.A_at(j, isent)  
+
+            A = self.A_at(j, isent)
+            B = self.B_at(j, isent)
             w_j, t_j = isent[j]
             
             # Get LOG emission probabilities
             if w_j >= self.V:
                 log_emission = torch.full((self.k,), float('-inf'))
-                if w_j == self.V:
-                    log_emission[self.eos_t] = 0.0
-                else:
-                    log_emission[self.bos_t] = 0.0
+                if w_j == self.V: log_emission[self.eos_t] = 0.0
+                else: log_emission[self.bos_t] = 0.0
             else:
-                log_emission = torch.log(self.B[:, w_j] + 1e-45)
-            
+                log_emission = torch.log(B[:, w_j] + 1e-45)
             # Compute LOG scores: log(α[j-1]) + log(A) + log(emission)
             log_A = torch.log(A + 1e-45)
             scores = alpha[j-1].unsqueeze(1) + log_A + log_emission.unsqueeze(0)
@@ -531,14 +521,19 @@ class HiddenMarkovModel:
         correctly."""
 
         isent = self._integerize_sentence(sentence, corpus)
+        self.setup_sentence(isent)
         if all(t is not None for _, t in isent):
             logp = torch.tensor(0.0, device=self.A.device)
             prev_t = self.bos_t
             for j in range(1, len(isent)):
                 w_j, t_j = isent[j]
-                logp = logp + torch.log(self.A[prev_t, t_j] + 1e-45)
+                A = self.A_at(j, isent)
+                B = self.B_at(j, isent)
+
+                logp += torch.log(A[prev_t, t_j] + 1e-45)
                 if w_j < self.V:
-                    logp = logp + torch.log(self.B[t_j, w_j] + 1e-45)
+                    logp += torch.log(B[t_j, w_j] + 1e-45)
+
                 prev_t = t_j
             return logp
         # Un/partially tagged → use forward once you implement it
@@ -614,3 +609,6 @@ class HiddenMarkovModel:
     @typechecked
     def B_at(self, position: int, sentence: IntegerizedSentence) -> Tensor:
         return self.B
+
+    def setup_sentence(self, isent: IntegerizedSentence):
+        return
